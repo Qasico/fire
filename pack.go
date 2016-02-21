@@ -461,7 +461,7 @@ excludeRegexp []*regexp.Regexp, includePath ...string) (err error) {
 func isBeegoProject(thePath string) bool {
 	fh, _ := os.Open(thePath)
 	fis, _ := fh.Readdir(-1)
-	regex := regexp.MustCompile(`(?s)package main.*?import.*?\(.*?"github.com/astaxie/beego".*?\).*func main()`)
+	regex := regexp.MustCompile(`(?s)package main.*?import.*?\(.*?"github.com/qasico/beego".*?\).*func main()`)
 	for _, fi := range fis {
 		if fi.IsDir() == false && strings.HasSuffix(fi.Name(), ".go") {
 			data, err := ioutil.ReadFile(path.Join(thePath, fi.Name()))

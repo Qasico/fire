@@ -30,23 +30,22 @@ func (c *{{ctrlName}}Controller) URLMapping() {
 // @router / [post]
 func (c *{{ctrlName}}Controller) Post() {
 	var v models.{{ctrlName}}
+	var response helper.APIResponse
 
-	json.Unmarshal(c.Ctx.Input.RequestBody, &v)
-
-	if valid := helper.Respond.Validator(&v); valid != false {
-		if _, err := models.Add{{ctrlName}}(&v); err == nil {
-			helper.Respond.SuccessWithModel("POST", v)
-		} else {
-			helper.Respond.Fail(err.Error())
+	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &v); err == nil {
+		if valid := response.Validator(&v); valid != false {
+			if _, err := models.Add{{ctrlName}}(&v); err == nil {
+				response.Success(1, v)
+			} else {
+				response.Failed(400, err.Error())
+			}
 		}
-
+	} else {
+		response.Failed(400, err.Error())
 	}
 
-	if !helper.Respond.IsSuccess() {
-		c.Ctx.Output.SetStatus(404)
-	}
-
-	c.Data["json"] = helper.Respond.Format
+	c.Ctx.Output.SetStatus(response.Code)
+	c.Data["json"] = response.GetResponse("POST")
 	c.ServeJSON()
 }
 
@@ -55,21 +54,18 @@ func (c *{{ctrlName}}Controller) Post() {
 // @Failure 403 :id is empty
 // @router /:id [get]
 func (c *{{ctrlName}}Controller) GetOne() {
+	response := helper.APIResponse{}
+
 	idStr := c.Ctx.Input.Param(":id")
 	id, _ := strconv.Atoi(idStr)
-
-	v, err := models.Get{{ctrlName}}ById(id)
-	if err != nil {
-		helper.Respond.Fail(err.Error())
+	if data, err := models.Get{{ctrlName}}ById(id); err == nil {
+		response.Success(1, data)
 	} else {
-		helper.Respond.SuccessWithModel("GET", v)
+		response.Failed(404, err.Error())
 	}
 
-	if !helper.Respond.IsSuccess() {
-		c.Ctx.Output.SetStatus(404)
-	}
-
-	c.Data["json"] = helper.Respond.Format
+	c.Ctx.Output.SetStatus(response.Code)
+	c.Data["json"] = response.GetResponse("GET")
 	c.ServeJSON()
 }
 
@@ -78,19 +74,16 @@ func (c *{{ctrlName}}Controller) GetOne() {
 // @Failure 403 
 // @router / [get]
 func (c *{{ctrlName}}Controller) GetAll() {
-	l, total, err := models.GetAll{{ctrlName}}(helper.QueryString(c.Input()))
+	response := helper.APIResponse{}
 
-	if err != nil {
-		helper.Respond.Fail(err.Error())
+	if data, total, err := models.GetAll{{ctrlName}}(helper.QueryString(c.Input())); err == nil {
+		response.Success(total, data)
 	} else {
-		helper.Respond.SuccessWithData(total, l)
+		response.Failed(400, err.Error())
 	}
 
-	if !helper.Respond.IsSuccess() {
-		c.Ctx.Output.SetStatus(404)
-	}
-
-	c.Data["json"] = helper.Respond.Format
+	c.Ctx.Output.SetStatus(response.Code)
+	c.Data["json"] = response.GetResponse("GET")
 	c.ServeJSON()
 }
 
@@ -99,28 +92,26 @@ func (c *{{ctrlName}}Controller) GetAll() {
 // @Failure 403 :id is not int
 // @router /:id [put]
 func (c *{{ctrlName}}Controller) Put() {
+	response := helper.APIResponse{}
+
 	idStr := c.Ctx.Input.Param(":id")
 	id, _ := strconv.Atoi(idStr)
 	v := models.{{ctrlName}}{Id: id}
-	
 	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &v); err == nil {
 		keys := helper.GetInputKeys(c.Ctx.Input.RequestBody)
-		if valid := helper.Respond.Validator(&v); valid != false {
+		if valid := response.Validator(&v); valid != false {
 			if err := models.Update{{ctrlName}}ById(&v, keys); err == nil {
-				helper.Respond.SuccessWithModel("GETONE", v)
+				response.Success(0, nil)
 			} else {
-				helper.Respond.Fail(err.Error())
+				response.Failed(404, err.Error())
 			}
 		}
-	}  else {
-		helper.Respond.Fail(err.Error())
+	} else {
+		response.Failed(400, err.Error())
 	}
 
-	if !helper.Respond.IsSuccess() {
-		c.Ctx.Output.SetStatus(404)
-	}
-
-	c.Data["json"] = helper.Respond.Format
+	c.Ctx.Output.SetStatus(response.Code)
+	c.Data["json"] = response.GetResponse("POST")
 	c.ServeJSON()
 }
 
@@ -129,20 +120,19 @@ func (c *{{ctrlName}}Controller) Put() {
 // @Failure 403 id is empty
 // @router /:id [delete]
 func (c *{{ctrlName}}Controller) Delete() {
+	response := helper.APIResponse{}
+
 	idStr := c.Ctx.Input.Param(":id")
 	id, _ := strconv.Atoi(idStr)
-
-	if err := models.Delete{{ctrlName}}(id); err == nil {
-		helper.Respond.SuccessWithModel("POST", v)
+	v := models.{{ctrlName}}{Id: id}
+	if err := models.Delete{{ctrlName}}(&v); err == nil {
+		response.Success(0, nil)
 	} else {
-		helper.Respond.Fail(err.Error())
+		response.Failed(404, err.Error())
 	}
 
-	if !helper.Respond.IsSuccess() {
-		c.Ctx.Output.SetStatus(404)
-	}
-
-	c.Data["json"] = helper.Respond.Format
+	c.Ctx.Output.SetStatus(response.Code)
+	c.Data["json"] = response.GetResponse("POST")
 	c.ServeJSON()
 }`
 

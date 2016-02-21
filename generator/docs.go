@@ -24,7 +24,6 @@ import (
 )
 
 var globalDocsTemplate = ``
-
 const (
 	ajson = "application/json"
 	axml = "application/xml"
@@ -209,7 +208,7 @@ func analisyscontrollerPkg(localName, pkgpath string) {
 		pps := strings.Split(pkgpath, "/")
 		importlist[pps[len(pps) - 1]] = pkgpath
 	}
-	if pkgpath == "github.com/astaxie/beego" {
+	if pkgpath == "github.com/qasico/beego" {
 		return
 	}
 	gopath := os.Getenv("GOPATH")

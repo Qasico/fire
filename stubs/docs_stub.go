@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/swagger"
+	"github.com/qasico/beego"
+	"github.com/qasico/beego/swagger"
 )
 
 const (

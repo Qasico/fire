@@ -45,7 +45,7 @@ func GetAll{{modelName}}(query map[int]map[string]string, fields []string, group
 	qs := o.QueryTable(new({{modelName}})).SetCond(helper.QueryCondition(query))
 
 	if helper.IsJoin(join) {
-		qs = o.QueryTable(new({{modelName}})).SetCond(helper.QueryCondition(query)).RelatedSel(helpers.QueryJoin(join))
+		qs = o.QueryTable(new({{modelName}})).SetCond(helper.QueryCondition(query)).RelatedSel(helper.QueryJoin(join))
 	}
 
 	total, err = qs.Count()

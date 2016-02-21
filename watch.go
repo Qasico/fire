@@ -151,7 +151,7 @@ func Autobuild(files []string, isgenerate bool) {
 	}
 
 	if isgenerate {
-		icmd := exec.Command("bee", "generate", "docs")
+		icmd := exec.Command("fire", "generate", "docs")
 		icmd.Stdout = os.Stdout
 		icmd.Stderr = os.Stderr
 		icmd.Run()
