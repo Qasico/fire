@@ -4,13 +4,12 @@ package stubs
 var controllerTemplate = `package controllers
 
 import (
-	"{{pkgPath}}/models"
-	"{{pkgPath}}/helpers"
-
 	"strconv"
 	"encoding/json"
+	"{{pkgPath}}/models"
 
-	"github.com/astaxie/beego"
+	"github.com/qasico/beego"
+	"github.com/qasico/beego/helper"
 )
 
 type {{ctrlName}}Controller struct {
@@ -25,126 +24,126 @@ func (c *{{ctrlName}}Controller) URLMapping() {
 	c.Mapping("Delete", c.Delete)
 }
 
-// @Title Post
-// @Description create {{ctrlName}}
-// @Param	body		body 	models.{{ctrlName}}	true		"body for {{ctrlName}} content"
-// @Success 200 {int} models.{{ctrlName}}.Id
+// @Title Create new data
+// @Success 200 {int} models.{{ctrlName}}
 // @Failure 403 body is empty
 // @router / [post]
 func (c *{{ctrlName}}Controller) Post() {
 	var v models.{{ctrlName}}
+
 	json.Unmarshal(c.Ctx.Input.RequestBody, &v)
 
-	if res, errData := helpers.Validator(&v); res == false {
-		c.Data["json"] = errData
-	} else {
-		if id, err := models.Add{{ctrlName}}(&v); err == nil {
-			helpers.Rf.Success(c.Ctx.Request.Method, int(id))
-			c.Data["json"] = helpers.Rf.Data
+	if valid := helper.Respond.Validator(&v); valid != false {
+		if _, err := models.Add{{ctrlName}}(&v); err == nil {
+			helper.Respond.SuccessWithModel("POST", v)
 		} else {
-			helpers.Rf.Fail(err.Error())
-			c.Data["json"] = helpers.Rf.Data
+			helper.Respond.Fail(err.Error())
 		}
+
 	}
 
-	c.ServeJson()
+	if !helper.Respond.IsSuccess() {
+		c.Ctx.Output.SetStatus(404)
+	}
+
+	c.Data["json"] = helper.Respond.Format
+	c.ServeJSON()
 }
 
-// @Title Get
-// @Description get {{ctrlName}} by id
-// @Param	id		path 	string	true		"The key for staticblock"
+// @Title Get single data with provided id
 // @Success 200 {object} models.{{ctrlName}}
 // @Failure 403 :id is empty
 // @router /:id [get]
 func (c *{{ctrlName}}Controller) GetOne() {
-	idStr := c.Ctx.Input.Params[":id"]
+	idStr := c.Ctx.Input.Param(":id")
 	id, _ := strconv.Atoi(idStr)
+
 	v, err := models.Get{{ctrlName}}ById(id)
 	if err != nil {
-		c.Data["json"] = nil
+		helper.Respond.Fail(err.Error())
 	} else {
-		c.Data["json"] = v
+		helper.Respond.SuccessWithModel("GET", v)
 	}
-	c.ServeJson()
+
+	if !helper.Respond.IsSuccess() {
+		c.Ctx.Output.SetStatus(404)
+	}
+
+	c.Data["json"] = helper.Respond.Format
+	c.ServeJSON()
 }
 
-// @Title Get All
-// @Description get {{ctrlName}}
-// @Param	query	query	string	false	"Filter. e.g. col1:v1,col2:v2 ..."
-// @Param	fields	query	string	false	"Fields returned. e.g. col1,col2 ..."
-// @Param	join	query	string	false	"Foreign key joined. e.g. col1,col2 ..."
-// @Param	groupby	query	string	false	"Group-by fields. e.g. col1,col2 ..."
-// @Param	sortby	query	string	false	"Sorted-by fields. e.g. col1,col2 ..."
-// @Param	order	query	string	false	"Order corresponding to each sortby field, if single value, apply to all sortby fields. e.g. desc,asc ..."
-// @Param	limit	query	string	false	"Limit the size of result set. Must be an integer"
-// @Param	offset	query	string	false	"Start position of result set. Must be an integer"
+// @Title Get data with parameters query string
 // @Success 200 {object} models.{{ctrlName}}
 // @Failure 403 
 // @router / [get]
 func (c *{{ctrlName}}Controller) GetAll() {
-	l, err, totals := models.GetAll{{ctrlName}}(helpers.QueryString(c.Input()))
-
-	helpers.Rf.Data = make(map[string]interface{})
-	helpers.Rf.Data["totals"] = totals
+	l, total, err := models.GetAll{{ctrlName}}(helper.QueryString(c.Input()))
 
 	if err != nil {
-		c.Data["json"] = nil
+		helper.Respond.Fail(err.Error())
 	} else {
-		if l == nil {
-			c.Data["json"] = nil
-		} else {
-			helpers.Rf.Success(c.Ctx.Request.Method, 0, l)
-			c.Data["json"] = helpers.Rf.Data
-		}
+		helper.Respond.SuccessWithData(total, l)
 	}
 
-	c.ServeJson()
+	if !helper.Respond.IsSuccess() {
+		c.Ctx.Output.SetStatus(404)
+	}
+
+	c.Data["json"] = helper.Respond.Format
+	c.ServeJSON()
 }
 
-// @Title Update
-// @Description update the {{ctrlName}}
-// @Param	id		path 	string				true		"The id you want to update"
-// @Param	body	body 	models.{{ctrlName}}	true		"body for {{ctrlName}} content"
+// @Title Update model with provided key and new values
 // @Success 200 {object} models.{{ctrlName}}
 // @Failure 403 :id is not int
 // @router /:id [put]
 func (c *{{ctrlName}}Controller) Put() {
-	idStr := c.Ctx.Input.Params[":id"]
+	idStr := c.Ctx.Input.Param(":id")
 	id, _ := strconv.Atoi(idStr)
 	v := models.{{ctrlName}}{Id: id}
 	
-	json.Unmarshal(c.Ctx.Input.RequestBody, &v)
-	keys := helpers.GetInputKeys(c.Ctx.Input.RequestBody)
-
-	if res, errData := helpers.Validator(&v); res == false {
-		c.Data["json"] = errData
-	} else {
-		if err := models.Update{{ctrlName}}ById(&v, keys); err == nil {
-			helpers.Rf.Success(c.Ctx.Request.Method, int(id))
-			c.Data["json"] = helpers.Rf.Data
-		} else {
-			helpers.Rf.Fail(err.Error())
-			c.Data["json"] = helpers.Rf.Data
+	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &v); err == nil {
+		keys := helper.GetInputKeys(c.Ctx.Input.RequestBody)
+		if valid := helper.Respond.Validator(&v); valid != false {
+			if err := models.Update{{ctrlName}}ById(&v, keys); err == nil {
+				helper.Respond.SuccessWithModel("GETONE", v)
+			} else {
+				helper.Respond.Fail(err.Error())
+			}
 		}
+	}  else {
+		helper.Respond.Fail(err.Error())
 	}
-	c.ServeJson()
+
+	if !helper.Respond.IsSuccess() {
+		c.Ctx.Output.SetStatus(404)
+	}
+
+	c.Data["json"] = helper.Respond.Format
+	c.ServeJSON()
 }
 
-// @Title Delete
-// @Description delete the {{ctrlName}}
-// @Param	id		path 	string	true		"The id you want to delete"
+// @Title Delete model with provided id
 // @Success 200 {string} delete success!
 // @Failure 403 id is empty
 // @router /:id [delete]
 func (c *{{ctrlName}}Controller) Delete() {
-	idStr := c.Ctx.Input.Params[":id"]
+	idStr := c.Ctx.Input.Param(":id")
 	id, _ := strconv.Atoi(idStr)
+
 	if err := models.Delete{{ctrlName}}(id); err == nil {
-		c.Data["json"] = "OK"
+		helper.Respond.SuccessWithModel("POST", v)
 	} else {
-		c.Data["json"] = nil
+		helper.Respond.Fail(err.Error())
 	}
-	c.ServeJson()
+
+	if !helper.Respond.IsSuccess() {
+		c.Ctx.Output.SetStatus(404)
+	}
+
+	c.Data["json"] = helper.Respond.Format
+	c.ServeJSON()
 }`
 
 func TemplateController() string {

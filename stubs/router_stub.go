@@ -10,7 +10,7 @@ package routers
 import (
 	"{{pkgPath}}/controllers"
 
-	"github.com/astaxie/beego"
+	"github.com/qasico/beego"
 )
 
 func init() {

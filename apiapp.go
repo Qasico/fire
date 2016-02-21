@@ -78,25 +78,14 @@ func createapi(cmd *Command, args []string) int {
 	fmt.Println("create docs:", path.Join(apppath, "docs"))
 	os.Mkdir(path.Join(apppath, "docs"), 0755)
 
-	fmt.Println("create helpers:", path.Join(apppath, "helpers"))
-	os.Mkdir(path.Join(apppath, "helpers"), 0755)
-
 	fmt.Println("create tests:", path.Join(apppath, "tests"))
 	os.Mkdir(path.Join(apppath, "tests"), 0755)
 
 	fpath := ""
 
 	//
-	// Stubbing helpers packages
+	// Stubbing env and main
 	// ----------------------------
-	fpath = path.Join(apppath, "helpers", "global_function.go")
-	writetofile(fpath, stubs.TemplateHelper())
-	helper.ColorLog("[INFO] helper => %s\n", fpath)
-
-	fpath = path.Join(apppath, "helpers", "response_formater.go")
-	writetofile(fpath, stubs.TemplateResponse())
-	helper.ColorLog("[INFO] helper => %s\n", fpath)
-
 	fpath = path.Join(apppath, ".env")
 	ac := strings.Replace(stubs.TemplateEnv(), "{{.Appname}}", args[0], -1);
 	writetofile(fpath, strings.Replace(ac, "{{.database}}", string(default_db), -1))
@@ -110,9 +99,9 @@ func createapi(cmd *Command, args []string) int {
 	} else if driver == "postgres" {
 		maingoContent = strings.Replace(maingoContent, "{{.DriverPkg}}", `_ "github.com/lib/pq"`, -1)
 	}
+
 	writetofile(fpath, strings.Replace(maingoContent, "{{.conn}}", connection, -1))
 	helper.ColorLog("[INFO] main => %s\n", fpath)
-
 	helper.ColorLog("[SUCC] Using '%s' as 'driver'\n", driver)
 	helper.ColorLog("[SUCC] Using '%s' as 'conn'\n", connection)
 	helper.ColorLog("[SUCC] Using '%s' as 'tables'\n", tables)
