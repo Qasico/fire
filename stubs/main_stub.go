@@ -16,9 +16,10 @@ import (
 )
 
 func init() {
-	orm.RegisterDataBase("default", "mysql", os.Getenv("DB_USER") + ":" + os.Getenv("DB_PASS") + "@tcp(" + os.Getenv("DB_HOST") + ":3306)/" + os.Getenv("DB_NAME"))
-	orm.DefaultTimeLoc = time.UTC
+	orm.RegisterDataBase("default", "mysql", os.Getenv("DB_USER") + ":" + os.Getenv("DB_PASS") + "@tcp(" + os.Getenv("DB_HOST") + ":3306)/" + os.Getenv("DB_NAME") + "?charset=utf8&loc=Asia%2FJakarta") 
+	
 	orm.DefaultRelsDepth = 3
+	orm.DefaultTimeLoc   = time.Local
 
 	if os.Getenv("APP_DEBUG") == "true" {
 		orm.Debug = true
