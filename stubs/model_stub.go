@@ -48,19 +48,19 @@ func GetAll{{modelName}}(query map[int]map[string]string, fields []string, group
 		qs = o.QueryTable(new({{modelName}})).SetCond(helper.QueryCondition(query)).RelatedSel(helper.QueryJoin(join))
 	}
 
-	total, err = qs.Count()
-	if err != nil || total == 0 {
-		return nil, total, err
-	}
-
 	if len(sortby) != len(order) && len(order) != 1 {
 		return nil, total, errors.New("'sortby', 'order' sizes mismatch or 'order' size is not 1")
 	}
 
 	sortFields := helper.SetSorting(sortby, order)
+	qs = qs.OrderBy(sortFields...).GroupBy(groupby...)
+
+	total, err = qs.Count()
+	if err != nil || total == 0 {
+		return nil, total, err
+	}
 
 	var l []{{modelName}}
-	qs = qs.OrderBy(sortFields...).GroupBy(groupby...)
 	if _, err := qs.Limit(limit, offset).All(&l, fields...); err == nil {
 		if len(fields) == 0 {
 			for _, v := range l {
